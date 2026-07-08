@@ -12,6 +12,7 @@ el PDF viene escaneado/rotado, hay que reajustar las bandas de coordenadas
 de abajo (Y_BANDS). Probado contra el formato SIM vigente a jul/2026.
 """
 
+import re
 import fitz
 
 # Bandas (y_min, y_max, x_min, x_max) calibradas contra el formulario SIM
@@ -42,6 +43,7 @@ def extract_di_pdf(pdf_path: str) -> dict:
     doc = fitz.open(pdf_path)
     page = doc[0]
     words = page.get_text("words")
+    full_text = page.get_text()
 
     data = {
         "aduana": _value_in_band(words, *Y_BANDS["aduana"]),
@@ -49,7 +51,12 @@ def extract_di_pdf(pdf_path: str) -> dict:
         "pais_origen": _value_in_band(words, *Y_BANDS["origen"]),
         "pais_procedencia": _value_in_band(words, *Y_BANDS["procedencia"]),
         "deposito": _value_in_band(words, *Y_BANDS["deposito"]),
+        "referencia": None,
     }
+
+    m = re.search(r"Ref:\s*(\d+\s*-\s*[\w-]+)", full_text)
+    if m:
+        data["referencia"] = re.sub(r"\s*-\s*", " - ", m.group(1).strip())
 
     doc.close()
     return data
