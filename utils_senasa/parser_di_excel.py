@@ -32,7 +32,7 @@ def extract_di_excel(xlsx_path: str) -> dict:
     """
     wb = openpyxl.load_workbook(xlsx_path, data_only=True)
 
-    data = {"aduana": None, "pais_origen": None, "pais_procedencia": None, "deposito": None}
+    data = {"aduana": None, "pais_origen": None, "pais_procedencia": None, "deposito": None, "referencia": None}
 
     # --- Carátula ---
     if "Carátula" in wb.sheetnames:
@@ -43,6 +43,12 @@ def extract_di_excel(xlsx_path: str) -> dict:
 
         if "ADUANA" in header_map:
             data["aduana"] = _strip_code(values[header_map["ADUANA"]])
+
+        interno = values[header_map["INTERNO"]] if "INTERNO" in header_map else None
+        referencia = values[header_map["REFERENCIA"]] if "REFERENCIA" in header_map else None
+        if interno or referencia:
+            partes = [str(p) for p in (interno, referencia) if p]
+            data["referencia"] = " - ".join(partes)
 
     # --- Bultos (el Depósito real está acá, no en Carátula) ---
     if "Bultos" in wb.sheetnames:
