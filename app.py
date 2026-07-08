@@ -37,12 +37,19 @@ st.caption(
 )
 
 if st.session_state.resultado is None:
-    st.markdown("### 1. Subí la Declaración Jurada de SENASA (PDF)")
+    st.markdown("### 1. Referencia del despacho")
+    st.text_input(
+        "Referencia (para identificar el reporte)",
+        key="referencia_input",
+        placeholder="Ej: 999792 - D-7418",
+    )
+
+    st.markdown("### 2. Subí la Declaración Jurada de SENASA (PDF)")
     dj_file = st.file_uploader(
         "DJ SENASA (PDF)", type=["pdf"], key=f"dj_{st.session_state.uploader_key}"
     )
 
-    st.markdown("### 2. Subí la DI")
+    st.markdown("### 3. Subí la DI")
     col1, col2 = st.columns(2)
     with col1:
         di_excel_file = st.file_uploader(
@@ -89,9 +96,10 @@ if st.session_state.resultado is None:
         st.session_state.resultado = resultado
         st.session_state.dj_data = dj_data
         st.session_state.di_data = di_data
-        # Precarga la referencia con lo que se haya detectado automáticamente;
-        # el operador la puede corregir o completar a mano.
-        st.session_state.referencia_input = di_data.get("referencia") or ""
+        # Si el operador no cargó referencia a mano, se usa la detectada
+        # automáticamente en la DI como respaldo.
+        if not st.session_state.referencia_input:
+            st.session_state.referencia_input = di_data.get("referencia") or ""
         st.rerun()
 
 else:
@@ -113,11 +121,7 @@ else:
     checks = resultado["checks"]
     errores = [c for c in checks if not c["ok"]]
 
-    st.text_input(
-        "Referencia del despacho (para identificar el reporte)",
-        key="referencia_input",
-        placeholder="Ej: 999792 - D-7418",
-    )
+    st.caption(f"Referencia del despacho: **{st.session_state.referencia_input or '(sin referencia)'}**")
 
     st.markdown(f"### Resumen general — Aduana: **{resultado['aduana_key']}**")
     if errores:
