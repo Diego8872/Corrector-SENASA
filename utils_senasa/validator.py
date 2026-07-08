@@ -26,7 +26,7 @@ def merge_di_sources(di_excel: dict, di_pdf: dict) -> dict:
     campo por campo. Devuelve un dict con el mismo shape que ambos
     parsers más 'origen_dato' indicando de dónde salió cada campo.
     """
-    fields = ["aduana", "pais_origen", "pais_procedencia", "deposito"]
+    fields = ["aduana", "pais_origen", "pais_procedencia", "deposito", "referencia"]
     merged = {}
     fuente = {}
     for f in fields:
