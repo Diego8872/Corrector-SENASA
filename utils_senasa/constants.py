@@ -16,11 +16,15 @@ La clave debe ser un texto que aparezca dentro del campo "Aduana" de la DI
 
 ADUANA_RULES = {
     "EZEIZA": {
+        "aliases": ["EZEIZA"],
         "puerto_ingreso": "Aeropuerto Internacional De Ezeiza - Inspeccion",
         "medio_transporte": "Aereo",
         "lugar_destino": "Terminal de Cargas Areas (TCA)",
     },
     "BUENOS AIRES": {
+        # La DI suele traer la aduana como "BS.AS.(CAPITAL)" en vez de
+        # "BUENOS AIRES" tal cual, por eso hace falta la lista de alias.
+        "aliases": ["BUENOS AIRES", "BS AS", "BSAS", "BS.AS"],
         "puerto_ingreso": "Puerto De Buenos Aires",
         "medio_transporte": "Maritimo",
         "lugar_destino": None,  # se compara contra el Depósito de la DI
@@ -30,9 +34,9 @@ ADUANA_RULES = {
 
 def get_rules_for_aduana(aduana_texto: str):
     """
-    Busca en ADUANA_RULES la primera clave que aparezca como substring
-    (normalizado) dentro de aduana_texto. Devuelve (clave, reglas) o
-    (None, None) si no hay match.
+    Busca en ADUANA_RULES la primera clave cuyos alias aparezcan como
+    substring (normalizado) dentro de aduana_texto. Devuelve (clave, reglas)
+    o (None, None) si no hay match.
     """
     from .validator import normalize
 
@@ -41,6 +45,7 @@ def get_rules_for_aduana(aduana_texto: str):
 
     aduana_norm = normalize(aduana_texto)
     for key, rules in ADUANA_RULES.items():
-        if normalize(key) in aduana_norm:
-            return key, rules
+        for alias in rules["aliases"]:
+            if normalize(alias) in aduana_norm:
+                return key, rules
     return None, None
