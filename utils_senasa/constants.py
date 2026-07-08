@@ -7,7 +7,8 @@ Jurada de SENASA (DJ) debe tener en los campos "Punto de ingreso",
 
 - Si el valor es un string fijo -> se compara la DJ contra esa constante.
 - Si "lugar_destino" es None -> se compara la DJ contra el campo "Depósito"
-  informado en la DI (no hay valor fijo, depende de cada despacho).
+  informado en la DI, usando la tabla DEPOSITO_EQUIVALENCIAS (ver abajo),
+  porque el mismo lugar físico se nombra distinto en cada documento.
 
 Para agregar una aduana nueva, sumar una entrada al diccionario ADUANA_RULES.
 La clave debe ser un texto que aparezca dentro del campo "Aduana" de la DI
@@ -29,6 +30,19 @@ ADUANA_RULES = {
         "medio_transporte": "Maritimo",
         "lugar_destino": None,  # se compara contra el Depósito de la DI
     },
+}
+
+# Equivalencias de "Lugar de destino" (DJ SENASA) <-> "Depósito" (DI).
+# El mismo lugar físico se nombra distinto en cada documento, así que no
+# alcanza con comparar texto exacto. Cada entrada mapea el nombre que
+# aparece en la DJ con el/los nombres equivalentes que puede traer la DI.
+# Para sumar una equivalencia nueva, agregar un dict {"dj": ..., "di": [...]}
+# a la lista de la aduana correspondiente.
+DEPOSITO_EQUIVALENCIAS = {
+    "BUENOS AIRES": [
+        {"dj": "Exolgan", "di": ["Terminal Sur"]},
+        {"dj": "Terminal Rio De La Plata", "di": ["Terminal 1 2 Y 3"]},
+    ],
 }
 
 
