@@ -56,6 +56,33 @@ def _check(nombre, valor_dj, valor_esperado, detalle_esperado=None):
     }
 
 
+def _check_deposito(nombre, valor_dj, valor_di, equivalencias):
+    """
+    Compara Lugar de destino (DJ) vs Depósito (DI) usando la tabla de
+    equivalencias de la aduana (mismo lugar físico, nombre distinto en
+    cada documento). Si el valor de la DJ no está en la tabla, compara
+    texto exacto como respaldo.
+    """
+    dj_norm = normalize(valor_dj)
+    di_norm = normalize(valor_di)
+
+    ok = False
+    for eq in equivalencias:
+        if normalize(eq["dj"]) == dj_norm:
+            ok = di_norm in [normalize(d) for d in eq["di"]]
+            break
+    else:
+        ok = dj_norm == di_norm and valor_dj is not None
+
+    return {
+        "campo": nombre,
+        "valor_dj": valor_dj,
+        "valor_esperado": valor_di,
+        "detalle_esperado": "Depósito declarado en la DI",
+        "ok": bool(ok),
+    }
+
+
 def validate(dj_data: dict, di_data: dict) -> dict:
     """
     Compara la DJ SENASA contra la DI y devuelve:
@@ -65,6 +92,8 @@ def validate(dj_data: dict, di_data: dict) -> dict:
         "aduana_reconocida": bool,
       }
     """
+    from .constants import DEPOSITO_EQUIVALENCIAS
+
     aduana_texto = di_data.get("aduana")
     aduana_key, rules = get_rules_for_aduana(aduana_texto)
 
@@ -89,17 +118,19 @@ def validate(dj_data: dict, di_data: dict) -> dict:
     )
 
     # 3. Lugar de destino: constante o cruce contra Depósito de la DI
+    #    (usando la tabla de equivalencias, porque no siempre coincide el texto)
     if rules["lugar_destino"] is not None:
         checks.append(
             _check("Lugar de destino de la mercadería", dj_data.get("lugar_destino"), rules["lugar_destino"])
         )
     else:
+        equivalencias = DEPOSITO_EQUIVALENCIAS.get(aduana_key, [])
         checks.append(
-            _check(
+            _check_deposito(
                 "Lugar de destino de la mercadería",
                 dj_data.get("lugar_destino"),
                 di_data.get("deposito"),
-                detalle_esperado="Depósito declarado en la DI",
+                equivalencias,
             )
         )
 
